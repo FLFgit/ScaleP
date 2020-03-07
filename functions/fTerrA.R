@@ -1,5 +1,6 @@
 print("fTerrA: Calculation of Terrain Attributes using SAGA GIS")
 print("-------------------------------------------------------------------------------")
+#SAGA GIS Version 2.22 (x64)
 #------------------------------------------------------------------------------- 
 fTerrA <- function(DEM.DIR,
                   DEM,
