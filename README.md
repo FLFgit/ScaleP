@@ -1,2 +1,2 @@
 # ScaleP
-Scale-specific prediction of soil properties
+[Scale]-specific [P]rediction of soil classes and numeric parameters
