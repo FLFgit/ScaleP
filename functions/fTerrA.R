@@ -1,14 +1,16 @@
-print("fTerrA: Calculation of multi-scale terrain attributes using SAGA GIS")
+print("fTerrA: Calculation of Terrain Attributes using SAGA GIS")
 print("-------------------------------------------------------------------------------")
 #------------------------------------------------------------------------------- 
 fTerrA <- function(DEM.DIR,
                   DEM,
                   DEM.FRM,
                   OUT.DIR,
+                  TA,
                   TCI=TRUE,
                   MBI=TRUE,
                   NH=TRUE,
                   TPI=TRUE,
+                  VECTOR=TRUE,
                   MRVBF=TRUE,
                   AGGREGATE,
                   EPSG){
@@ -32,8 +34,9 @@ print("1 | Import DEM and aggregate cell size")
   crs(r) <- CRS(paste("+init=EPSG:",EPSG,sep=""))
   writeRaster(r,paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,sep=""),format="SAGA",overwrite=TRUE)
 
+if(VECTOR==TRUE){
 #------------------------------------------------------------------------------- 
-print("2 | Convert grid cells to polygons")
+print("2 | Convert aggregated grid cells to polygons")
 #------------------------------------------------------------------------------- 
   rsaga.geoprocessor(
     lib="shapes_grid",
@@ -41,6 +44,7 @@ print("2 | Convert grid cells to polygons")
     param=list(GRID=paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,".sgrd",sep=""),
                POLYGONS=paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,".shp",sep="")),
     env=myenv)
+}
 #------------------------------------------------------------------------------- 
 print("3 | Filling sinks")
 #-------------------------------------------------------------------------------   
@@ -53,8 +57,16 @@ print("3 | Filling sinks")
   
   
 #-------------------------------------------------------------------------------
-print("4 | Calculation of Openness Index")
+print("4 | Calculation of Shaded Relief and Openness Index")
 #-------------------------------------------------------------------------------
+rsaga.geoprocessor(
+    lib="ta_lighting", 
+    module=0, 
+    param=list(ELEVATION=paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,"_FILL.sgrd",sep=""), 
+               SHADE=c(paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,"_SHD",c(".sgrd"),sep="")),
+               EXAGGERATION=20),
+    env=myenv)  
+  
 rsaga.geoprocessor(
   lib="ta_lighting", 
   module=5, 
@@ -84,12 +96,6 @@ print("6 | Calculation of SAGA Topographic Wetnessindex (TWI)")
     param=list(DEM=paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,"_FILL.sgrd",sep=""),
                TWI=paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,"_TWI.sgrd",sep="")),
     env=myenv)
-  #Transformation
-  #rsaga.grid.calculus(c(paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,"_TWI.sgrd",sep="")), 
-  #                    paste(OUT.DIR,DEM,"_AGGREGATE",AGGREGATE,"_TWI_TH10.sgrd",sep=""), 
-  #                    ~(a/(a+10)),
-  #                    env=myenv)
-
 
 if(TCI==TRUE){
 #-------------------------------------------------------------------------------            
@@ -259,24 +265,23 @@ print("rename files")
 #-------------------------------------------------------------------------------
   #export names of terrain attributes
   setwd(file.path(OUT.DIR))
-  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.sgrd$",sep="")),decreasing=TRUE)
+  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.sgrd$",sep="")),decreasing=FALSE)
   l.g.df <- data.frame(TA=1:length(l.g),NAME=l.g)
   write.table(l.g.df,
               file=paste(OUT.DIR,"names_TerrainAttributes.txt",sep=""),
               sep=";",
               row.names = FALSE)
   #rename terrain attributes
-  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.sgrd$",sep="")),decreasing=TRUE)
   for(j in 1:length(l.g)){
-    file.rename(l.g[j], paste("TA",j,".sgrd",sep=""))
+    file.rename(l.g[j], paste(TA,j,".sgrd",sep=""))
   }
-  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.sdat$",sep="")),decreasing=TRUE)
+  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.sdat$",sep="")),decreasing=FALSE)
   for(j in 1:length(l.g)){
-    file.rename(l.g[j], paste("TA",j,".sdat",sep=""))
+    file.rename(l.g[j], paste(TA,j,".sdat",sep=""))
   }
-  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.mgrd$",sep="")),decreasing=TRUE)
+  l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.mgrd$",sep="")),decreasing=FALSE)
   for(j in 1:length(l.g)){
-    file.rename(l.g[j], paste("TA",j,".mgrd",sep=""))
+    file.rename(l.g[j], paste(TA,j,".mgrd",sep=""))
   }
   #if(ASC==TRUE){
   #for(j in 1:length(l.g)){
