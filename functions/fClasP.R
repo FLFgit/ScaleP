@@ -1,7 +1,7 @@
 #######################################################################################################
 #######################################################################################################
 #######################################################################################################
-print("Function for the prediction of soil classes")
+print("Functions for the [Scale]-specific [P]rediction of soil classes and numeric parameters")   
 #######################################################################################################
 #######################################################################################################
 #######################################################################################################
@@ -63,8 +63,6 @@ fClasP <- function(POLYGON.DIR,
   print("Import reference unit polygon file")
   #------------------------------------------------------------------------------------------------------
   PN <- st_read(paste(POLYGON.DIR,POLYGON.SHP,".shp",sep=""))
-  head(PN)
-  
   #------------------------------------------------------------------------------------------------------
   print("Overlay polygon and traning data set")
   #------------------------------------------------------------------------------------------------------
@@ -87,7 +85,6 @@ fClasP <- function(POLYGON.DIR,
                        classProbs=TRUE,
                        savePredictions = TRUE,
                        allowParallel = TRUE)
-  
   
   set.seed(123)
   if(UPTRAIN==TRUE){
@@ -127,11 +124,11 @@ fClasP <- function(POLYGON.DIR,
   acc.m <- Evaluate(actual=testing[[paste(T.CLASS,sep="")]], predicted=testing[[paste(T.CLASS,"_SIM",sep="")]])
   ##export
   write.table(acc.m$ConfusionMatrix, 
-              file = paste(TRAIN.SHP,"_",POLYGON.SHP,"_",T.CLASS,"_MODEL-",M.TRAIN,"_ExternalPerformance-CM",sep="",".csv"), 
+              file = paste(TRAIN.SHP,"_",POLYGON.SHP,"_",T.CLASS,"_MODEL-",M.TRAIN,"_CM",sep="",".csv"), 
               sep = ";", 
               dec=",")
   write.table(acc.m$AccMetrics, 
-              file = paste(TRAIN.SHP,"_",POLYGON.SHP,"_",T.CLASS,"_MODEL-",M.TRAIN,"_ExternalPerformance-AM",sep="",".csv"), 
+              file = paste(TRAIN.SHP,"_",POLYGON.SHP,"_",T.CLASS,"_MODEL-",M.TRAIN,"_AM",sep="",".csv"), 
               sep = ";", 
               dec=",")
   
