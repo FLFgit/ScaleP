@@ -35,7 +35,6 @@ rsaga.get.usage("ta_lighting",0,env =  myenv)
 ##Function
 #########################################################################################################
 fZonaSt <- function(RASTER.DIR,
-                    RASTER.PF,
                     RU.DIR,
                     RU.SHP,
                     PM.PF){
