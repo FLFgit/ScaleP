@@ -1,4 +1,4 @@
-print("Function to crop one- or multi.dimensional raster files")
+print("Function to crop one- or multi-dimensional raster files")
 #########################################################################################################
 ##Libraries
 #########################################################################################################
@@ -16,16 +16,16 @@ loadandinstall(packages)
 fCropRaster <- function(RU.DIR,
                         RU.SHP,
                         RASTER.DIR,
-                        RASTER.GRD,
+                        RASTER.FILE,
                         RASTER.FRM,
                         RASTER.EPSG,
                         MULTI=TRUE,
                         EXTENT=TRUE){
 s <- shapefile(file.path(RU.DIR,RU.SHP),verbose=TRUE)
 if(MULTI==TRUE){
-r <- stack(paste(RASTER.DIR,RASTER.GRD,RASTER.FRM,sep=""))}
+r <- stack(paste(RASTER.DIR,RASTER.FILE,RASTER.FRM,sep=""))}
 if(MULTI==FALSE){
-r <- raster(paste(RASTER.DIR,RASTER.GRD,RASTER.FRM,sep=""))}
+r <- raster(paste(RASTER.DIR,RASTER.FILE,RASTER.FRM,sep=""))}
 crs(r) <- CRS(paste("+init=epsg:",RASTER.EPSG,sep=""))
 #reproject shape file
 s <- spTransform(s, r@crs)
@@ -35,9 +35,9 @@ if(EXTENT==TRUE){
 r.crop <- crop(r, extent(s))}
 #r.crop = projectRaster(r.crop, crs = "+init=epsg:25832", method = "bilinear")
 if(RASTER.FRM==".tif"){
-writeRaster(r.crop, filename=paste(RASTER.DIR,RASTER.GRD,"_CROP",RASTER.FRM,sep=""), format="GTiff", overwrite=TRUE)}
+writeRaster(r.crop, filename=paste(RASTER.DIR,RASTER.FILE,"_CROP",RASTER.FRM,sep=""), format="GTiff", overwrite=TRUE)}
 if(RASTER.FRM==".asc"){
-  writeRaster(r.crop, filename=paste(RASTER.DIR,RASTER.GRD,"_CROP",RASTER.FRM,sep=""), format="ascii", overwrite=TRUE)}
+  writeRaster(r.crop, filename=paste(RASTER.DIR,RASTER.FILE,"_CROP",RASTER.FRM,sep=""), format="ascii", overwrite=TRUE)}
 if(RASTER.FRM==".sdat"){
-  writeRaster(r.crop, filename=paste(RASTER.DIR,RASTER.GRD,"_CROP",RASTER.FRM,sep=""), format="SAGA", overwrite=TRUE)}
+  writeRaster(r.crop, filename=paste(RASTER.DIR,RASTER.FILE,"_CROP",RASTER.FRM,sep=""), format="SAGA", overwrite=TRUE)}
 }
