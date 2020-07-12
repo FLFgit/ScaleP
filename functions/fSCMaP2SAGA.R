@@ -17,11 +17,27 @@ fSCMaP2SAGA <- function(SCMaP.DIR,
                        SCMaP.FILE,
                        SCMaP.PF,
                        SCMaP.FRM,
-                       OUT.DIR){
+                       OUT.DIR,
+                       EXTENT=TRUE){
 #-----------------------------------------------------------------------------------------------------
-print("Generating single RS files")
+print("Import SCMaP file")
 #-----------------------------------------------------------------------------------------------------
 r <- stack(paste(SCMaP.DIR,SCMaP.FILE,SCMaP.FRM,sep=""))
+
+if(EXTENT==TRUE){
+#-----------------------------------------------------------------------------------------------------
+print("Export extent shape file")
+#-----------------------------------------------------------------------------------------------------
+e <- extent(r)
+p <- as(e, 'SpatialPolygons')
+crs(p) <- crs(r)
+setwd(file.path(SCMaP.DIR))
+shapefile(p, "Extent2.shp")
+}
+
+#-----------------------------------------------------------------------------------------------------
+print("Generating single RS files in SAGA format")
+#-----------------------------------------------------------------------------------------------------
 pb <- txtProgressBar(min=0, max=length(r@layers), style=3)
 for(i in 1:length(r@layers)){
    r[[i]][r[[i]] < 0] <- NA
@@ -31,3 +47,4 @@ for(i in 1:length(r@layers)){
     setTxtProgressBar(pb, i)
   }
 }
+
