@@ -51,50 +51,47 @@ rsaga.get.usage("ta_lighting",0,env =  myenv)
 #########################################################################################################
 ##Function
 #########################################################################################################
-fTerrA <- function(DEM.DIR,
-                  DEM,
-                  DEM.FRM,
-                  OUT.DIR,
-                  TA,
-                  TCI=TRUE,
-                  P.CA1,
-                  P.CA2,
-                  P.CA3,
-                  MBI=TRUE,
-                  P.MBI1,
-                  P.MBI2,
-                  P.MBI3,
-                  NH=TRUE,
-                  P.NH1,
-                  P.NA2,
-                  P.NA3,
-                  TPI=TRUE,
-                  P.TPI1,
-                  P.TPI2,
-                  P.TPI3,
-                  EPSG){
-#------------------------------------------------------------------------------- 
-#print("Import DEM and export to SAGA format")
-#------------------------------------------------------------------------------- 
-#rsaga.geoprocessor(
-#  lib="io_grid",
-#  module=1,
-#  param=list(FILE=paste(DEM.DIR,DEM,DEM.FRM,sep=""),
-#             GRID=paste(OUT.DIR,DEM,".sgrd",sep="")),
-#  env=myenv)
-
-#------------------------------------------------------------------------------- 
-print("1 | Import DEM")
-#------------------------------------------------------------------------------- 
-  r <- raster(paste(DEM.DIR,DEM,DEM.FRM,sep=""))
+fTerrA1 <- function(DEM.DIR,
+                   DEM,
+                   DEM.FRM,
+                   OUT.DIR,
+                   TA,
+                   TCI=TRUE,
+                   P.CA1,
+                   P.CA2,
+                   P.CA3,
+                   MBI=TRUE,
+                   P.MBI1,
+                   P.MBI2,
+                   P.MBI3,
+                   NH=TRUE,
+                   P.NH1,
+                   P.NH2,
+                   P.NH3,
+                   TPI=TRUE,
+                   P.TPI1,
+                   P.TPI2,
+                   P.TPI3,
+                   EPSG){
+  #------------------------------------------------------------------------------- 
+  print("1 | Import DEM")
+  #------------------------------------------------------------------------------- 
+  rsaga.geoprocessor(
+    lib="io_grid",
+    module=1,
+    param=list(FILE=paste(DEM.DIR,DEM,DEM.FRM,sep=""),
+               GRID=paste(OUT.DIR,DEM,".sgrd",sep="")),
+    env=myenv)
+  
+  #r <- raster(paste(DEM.DIR,DEM,DEM.FRM,sep=""))
   #r[r < 0] <- NA
   #plot(r)
   #r <- aggregate(r,fact=AGGREGATE, fun=mean)
-  crs(r) <- CRS(paste("+init=EPSG:",EPSG,sep=""))
-  writeRaster(r,paste(OUT.DIR,DEM,sep=""),format="SAGA",overwrite=TRUE)
-#------------------------------------------------------------------------------- 
-#print("3 | Filling sinks")
-#-------------------------------------------------------------------------------   
+  #crs(r) <- CRS(paste("+init=EPSG:",EPSG,sep=""))
+  #writeRaster(r,paste(OUT.DIR,DEM,sep=""),format="SAGA",overwrite=TRUE)
+  #------------------------------------------------------------------------------- 
+  print("2 | Filling sinks")
+  #-------------------------------------------------------------------------------   
   rsaga.geoprocessor(
     lib="ta_preprocessor",
     module=3,
@@ -102,10 +99,10 @@ print("1 | Import DEM")
                RESULT=paste(OUT.DIR,DEM,"_FILL.sgrd",sep="")),
     env=myenv)
   
-#-------------------------------------------------------------------------------
-print("4 | Calculation of Shaded Relief and Openness Index")
-#-------------------------------------------------------------------------------
-rsaga.geoprocessor(
+  #-------------------------------------------------------------------------------
+  print("3 | Calculation of Shaded Relief and Openness Index")
+  #-------------------------------------------------------------------------------
+  rsaga.geoprocessor(
     lib="ta_lighting", 
     module=0, 
     param=list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
@@ -113,210 +110,210 @@ rsaga.geoprocessor(
                EXAGGERATION=20),
     env=myenv)  
   
-rsaga.geoprocessor(
-  lib="ta_lighting", 
-  module=5, 
-  param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
-             POS=paste(OUT.DIR,DEM,"_TOP.sgrd",sep=""),
-             NEG=paste(OUT.DIR,DEM,"_TON.sgrd",sep=""),
-             METHOD=0),
-  env=myenv)  
-
-#------------------------------------------------------------------------------- 
-print("5 | Slope calculation (degrees)")
-#-------------------------------------------------------------------------------
-rsaga.geoprocessor(lib="ta_morphometry",
-                   module=0,
-                   param=list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                              SLOPE=paste(OUT.DIR,DEM,"_SLP.sgrd",sep=""),
-                              METHOD=6,
-                              UNIT_SLOPE=1),
-                   env=myenv)
-
-#-------------------------------------------------------------------------------            
-print("6 | Calculation of SAGA Topographic Wetnessindex (TWI)")
-#-------------------------------------------------------------------------------
+  rsaga.geoprocessor(
+    lib="ta_lighting", 
+    module=5, 
+    param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
+               POS=paste(OUT.DIR,DEM,"_TOP.sgrd",sep=""),
+               NEG=paste(OUT.DIR,DEM,"_TON.sgrd",sep=""),
+               METHOD=0),
+    env=myenv)  
+  
+  #------------------------------------------------------------------------------- 
+  print("4 | Slope calculation (degrees)")
+  #-------------------------------------------------------------------------------
+  rsaga.geoprocessor(lib="ta_morphometry",
+                     module=0,
+                     param=list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                                SLOPE=paste(OUT.DIR,DEM,"_SLP.sgrd",sep=""),
+                                METHOD=6,
+                                UNIT_SLOPE=1),
+                     env=myenv)
+  
+  #-------------------------------------------------------------------------------            
+  print("5 | Calculation of SAGA Topographic Wetnessindex (TWI)")
+  #-------------------------------------------------------------------------------
   rsaga.geoprocessor(
     lib="ta_hydrology", 
     module=15, 
     param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
                TWI=paste(OUT.DIR,DEM,"_TWI.sgrd",sep="")),
     env=myenv)
-
-if(TCI==TRUE){
-#-------------------------------------------------------------------------------            
-print("7 | Calculation of variants of vertical distance to channel network (VDC) 
+  
+  if(TCI==TRUE){
+    #-------------------------------------------------------------------------------            
+    print("6 | Calculation of variants of vertical distance to channel network (VDC) 
            and of terrain classification index (TCI)")
-#-------------------------------------------------------------------------------
- print("7-1 | Calculation of flow accumulation")
-  rsaga.geoprocessor(lib="ta_hydrology",
-                     module=0, 
-                     param=list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                                CAREA=paste(OUT.DIR,DEM,"_CA.sgrd",sep=""),
-                                METHOD=4),
-                     env=myenv)
-  
-  print("7-2 | Calculation of channel network variants")
-  P.CA <- round(lseq(P.CA1,P.CA2,P.CA3),0)
-  sink(paste(OUT.DIR,"P_CA.txt",sep=""))
-  print(P.CA)
-  sink()
-  
-  pb <- txtProgressBar(min=1, max=length(P.CA), style=3) 
-  for(i in 1:length(P.CA)){
-    print(paste("Loop ",i,"/",length(P.CA),sep=""))
-    
-    rsaga.geoprocessor("ta_channels",0,list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                                            SHAPES=paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""),
-                                            INIT_GRID=paste(OUT.DIR,DEM,"_CA.sgrd",sep=""),
-                                            INIT_METHOD=2,
-                                            INIT_VALUE=P.CA[i],
-                                            DIV_CELLS=100,
-                                            MINLEN=2),
-                       env=myenv)
-
-    print("7-3 | Add elevation grid Values to Shapes and rename elevation column name")
-    rsaga.geoprocessor("shapes_grid",1,list(GRIDS=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                                            SHAPES=paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep="")),
+    #-------------------------------------------------------------------------------
+    print("6-1 | Calculation of flow accumulation")
+    rsaga.geoprocessor(lib="ta_hydrology",
+                       module=0, 
+                       param=list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                                  CAREA=paste(OUT.DIR,DEM,"_CA.sgrd",sep=""),
+                                  METHOD=4),
                        env=myenv)
     
-    #Rename elevation column name:
-    s <- shapefile(paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""))
-    colnames(s@data) <- paste(c(names(s@data)[-length(s@data)],"E"))
+    print("6-2 | Calculation of channel network variants")
+    P.CA <- round(lseq(P.CA1,P.CA2,P.CA3),0)
+    sink(paste(OUT.DIR,"P_CA.txt",sep=""))
+    print(P.CA)
+    sink()
     
-    #Delete columns with elevation smaller 0:
-    s <- s[which(s@data$E>=0),]
-    shapefile(s,paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""),overwrite=TRUE)
-    
-    print("7-4 | Thin spline interpolation of elevation base level")  
-    rsaga.geoprocessor("grid_spline",1,list(SHAPES=paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""),
-                                            FIELD="E",
-                                            TARGET_DEFINITION=1,
-                                            TARGET_TEMPLATE=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                                            TARGET_OUT_GRID=paste(OUT.DIR,DEM,"_BL_TH",P.CA[i],c(".sgrd"),sep=""),
-                                            SEARCH_RANGE=1,
-                                            SEARCH_POINTS_MAX=50,
-                                            SEARCH_DIRECTION=0),
-                       env=myenv)
-    
-    print("7-5 | VDC calculation")  
-    rsaga.grid.calculus(c(paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
-                          paste(OUT.DIR,DEM,"_BL_TH",P.CA[i],c(".sgrd"),sep="")), 
+    pb <- txtProgressBar(min=1, max=length(P.CA), style=3) 
+    for(i in 1:length(P.CA)){
+      print(paste("Loop ",i,"/",length(P.CA),sep=""))
+      
+      rsaga.geoprocessor("ta_channels",0,list(ELEVATION=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                                              SHAPES=paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""),
+                                              INIT_GRID=paste(OUT.DIR,DEM,"_CA.sgrd",sep=""),
+                                              INIT_METHOD=2,
+                                              INIT_VALUE=P.CA[i],
+                                              DIV_CELLS=100,
+                                              MINLEN=2),
+                         env=myenv)
+      
+      print("6-3 | Add elevation grid Values to Shapes and rename elevation column name")
+      rsaga.geoprocessor("shapes_grid",1,list(GRIDS=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                                              SHAPES=paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep="")),
+                         env=myenv)
+      
+      #Rename elevation column name:
+      s <- shapefile(paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""))
+      colnames(s@data) <- paste(c(names(s@data)[-length(s@data)],"E"))
+      
+      #Delete columns with elevation smaller 0:
+      s <- s[which(s@data$E>=0),]
+      shapefile(s,paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""),overwrite=TRUE)
+      
+      print("6-4 | Thin spline interpolation of elevation base level")  
+      rsaga.geoprocessor("grid_spline",1,list(SHAPES=paste(OUT.DIR,DEM,"_channel-network_TH",P.CA[i],c(".shp"),sep=""),
+                                              FIELD="E",
+                                              TARGET_DEFINITION=1,
+                                              TARGET_TEMPLATE=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                                              TARGET_OUT_GRID=paste(OUT.DIR,DEM,"_BL_TH",P.CA[i],c(".sgrd"),sep=""),
+                                              SEARCH_RANGE=1,
+                                              SEARCH_POINTS_MAX=50,
+                                              SEARCH_DIRECTION=0),
+                         env=myenv)
+      
+      print("6-5 | VDC calculation")  
+      rsaga.grid.calculus(c(paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
+                            paste(OUT.DIR,DEM,"_BL_TH",P.CA[i],c(".sgrd"),sep="")), 
                           paste(OUT.DIR,DEM,"_VDC_TH",P.CA[i],c(".sgrd"),sep=""), 
                           ~(a-b),
-                        env=myenv)
-    
-    #TCI calculation
-    rsaga.geoprocessor(lib="ta_hydrology",
-                       module=24, 
-                       param=list(DISTANCE=paste(OUT.DIR,DEM,"_VDC_TH",P.CA[i],c(".sgrd"),sep=""),
-                                  TWI=paste(OUT.DIR,DEM,"_TWI.sgrd",sep=""),
-                                  TCILOW=paste(OUT.DIR,DEM,"_TCI_TH",P.CA[i],c(".sgrd"),sep="")),
-                       env=myenv)
-    setTxtProgressBar(pb, i)
+                          env=myenv)
+      
+      #TCI calculation
+      rsaga.geoprocessor(lib="ta_hydrology",
+                         module=24, 
+                         param=list(DISTANCE=paste(OUT.DIR,DEM,"_VDC_TH",P.CA[i],c(".sgrd"),sep=""),
+                                    TWI=paste(OUT.DIR,DEM,"_TWI.sgrd",sep=""),
+                                    TCILOW=paste(OUT.DIR,DEM,"_TCI_TH",P.CA[i],c(".sgrd"),sep="")),
+                         env=myenv)
+      setTxtProgressBar(pb, i)
+    }
   }
-}
-
-
-if(MBI==TRUE){
-#------------------------------------------------------------------------------- 
-print("8 | Calculation of Mass Balance Index (MBI) variants")
-#-------------------------------------------------------------------------------
-  P.MBI <- round(lseq(P.MBI1,P.MBI2,P.MBI3),4)
-  sink(paste(OUT.DIR,"P_MBI.txt",sep=""))
-  print(P.MBI)
-  sink()
-  pb <- txtProgressBar(min=1, max=length(P.MBI), style=3)  
-  for(i in 1:length(P.MBI)){
-    rsaga.geoprocessor(
-      lib="ta_morphometry",
-      module=10,
-      param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                 #HREL=paste(OUT.DIR,DEM,"_VDC.sgrd",sep=""),
-                 MBI=c(paste(OUT.DIR,DEM,'_MBI',i,c(".sgrd"),sep="")),#ouput
-                 TSLOPE=10,
-                 TCURVE=P.MBI[i]),#transfer variables
-      env=myenv)
-    #mbi histogram visualization
-    #random sampling of mbi points and density plot
-    rsaga.geoprocessor(
-      lib="shapes_grid", 
-      module=4, 
-      param=list(GRID=c(paste(OUT.DIR,DEM,'_MBI',i,c(".sgrd"),sep="")), 
-                 FREQ=50, 
-                 POINTS=paste(OUT.DIR,DEM,"_MBI_point",sep="")),
-      env=myenv)
-    
-    mbi.p <- shapefile(paste(OUT.DIR,DEM,"_MBI_point.shp",sep=""))
-    head(mbi.p@data)
-    
-    pdf(paste(OUT.DIR,DEM,'_MBI',i,c(".pdf"),sep=""),width=4,height=4)
-    plot(density(mbi.p$VALUE, from=-2, to=2,na.rm=TRUE),
-         main="", xlab=paste(DEM,'_MBI',i,sep=""))
-    dev.off()
-    setTxtProgressBar(pb, i)
-  }
-  }
-
-if(NH==TRUE){
-#-------------------------------------------------------------------------------
-print("9 | Calculation of Normalized Hight (NH) variants")
-#-------------------------------------------------------------------------------
-  P.NH <- round(lseq(P.NH1,P.NH2,P.NH3),0)
-  sink(paste(OUT.DIR,"P_NH.txt",sep=""))
-  print(P.NH)
-  sink()
   
-  pb <- txtProgressBar(min=1, max=length(P.NH), style=3) 
-  for(i in 1:length(P.NH)){
-    rsaga.geoprocessor(
-      lib="ta_morphometry", 
-      module=14, 
-      param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
-                 NH=paste(OUT.DIR,DEM,"_NH",P.NH[i],c(".sgrd"),sep=""),
-                 W=0.5,
-                 T=P.NH[i],
-                 E=2),
-      env=myenv)
-  setTxtProgressBar(pb, i)
-  }
-  }
-
   
-if(TPI==TRUE){
-#-------------------------------------------------------------------------------
-print("10 | Calculation of Topographic Position Index (TPI) variants")
-#-------------------------------------------------------------------------------
-  P.TPI <- round(lseq(P.TPI1,P.TPI2,P.TPI3),0)
-  pb <- txtProgressBar(min=1, max=length(P.TPI), style=3) 
-  for(i in 1:length(P.TPI)){
-    rsaga.geoprocessor(lib="ta_morphometry",
-                       module=18,
-                       param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
-                                  TPI=paste(OUT.DIR,DEM,"_TPI",P.TPI[i],c(".sgrd"),sep=""),
-                                  RADIUS_MIN=0,
-                                  RADIUS_MAX=P.TPI[i]),
-                       env=myenv)
-  setTxtProgressBar(pb, i)  
+  if(MBI==TRUE){
+    #------------------------------------------------------------------------------- 
+    print("7 | Calculation of Mass Balance Index (MBI) variants")
+    #-------------------------------------------------------------------------------
+    P.MBI <- round(lseq(P.MBI1,P.MBI2,P.MBI3),4)
+    sink(paste(OUT.DIR,"P_MBI.txt",sep=""))
+    print(P.MBI)
+    sink()
+    pb <- txtProgressBar(min=1, max=length(P.MBI), style=3)  
+    for(i in 1:length(P.MBI)){
+      rsaga.geoprocessor(
+        lib="ta_morphometry",
+        module=10,
+        param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                   #HREL=paste(OUT.DIR,DEM,"_VDC.sgrd",sep=""),
+                   MBI=c(paste(OUT.DIR,DEM,'_MBI',i,c(".sgrd"),sep="")),#ouput
+                   TSLOPE=10,
+                   TCURVE=P.MBI[i]),#transfer variables
+        env=myenv)
+      #mbi histogram visualization
+      #random sampling of mbi points and density plot
+      rsaga.geoprocessor(
+        lib="shapes_grid", 
+        module=4, 
+        param=list(GRID=c(paste(OUT.DIR,DEM,'_MBI',i,c(".sgrd"),sep="")), 
+                   FREQ=50, 
+                   POINTS=paste(OUT.DIR,DEM,"_MBI_point",sep="")),
+        env=myenv)
+      
+      mbi.p <- shapefile(paste(OUT.DIR,DEM,"_MBI_point.shp",sep=""))
+      head(mbi.p@data)
+      
+      pdf(paste(OUT.DIR,DEM,'_MBI',i,c(".pdf"),sep=""),width=4,height=4)
+      plot(density(mbi.p$VALUE, from=-2, to=2,na.rm=TRUE),
+           main="", xlab=paste(DEM,'_MBI',i,sep=""))
+      dev.off()
+      setTxtProgressBar(pb, i)
+    }
   }
+  
+  if(NH==TRUE){
+    #-------------------------------------------------------------------------------
+    print("8 | Calculation of Normalized Hight (NH) variants")
+    #-------------------------------------------------------------------------------
+    P.NH <- round(lseq(P.NH1,P.NH2,P.NH3),0)
+    sink(paste(OUT.DIR,"P_NH.txt",sep=""))
+    print(P.NH)
+    sink()
+    
+    pb <- txtProgressBar(min=1, max=length(P.NH), style=3) 
+    for(i in 1:length(P.NH)){
+      rsaga.geoprocessor(
+        lib="ta_morphometry", 
+        module=14, 
+        param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
+                   NH=paste(OUT.DIR,DEM,"_NH",P.NH[i],c(".sgrd"),sep=""),
+                   W=0.5,
+                   T=P.NH[i],
+                   E=2),
+        env=myenv)
+      setTxtProgressBar(pb, i)
+    }
   }
-
-#-------------------------------------------------------------------------------
-#print("11 | Calculation of Multi-Resolution Valley Bottom Flatness (MRVBF) index")
-#-------------------------------------------------------------------------------
-#if(MRVBF==TRUE){
-#   rsaga.geoprocessor(
-#      lib="ta_morphometry", 
-#      module=8, 
-#      param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
-#                 MRVBF=c(paste(OUT.DIR,DEM,"_MRVBF.sgrd",sep="")),
-#                 MAX_RES=1000),
-#      env=myenv)
-#  }
-
-#------------------------------------------------------------------------------- 
-print("rename files")
-#-------------------------------------------------------------------------------
+  
+  
+  if(TPI==TRUE){
+    #-------------------------------------------------------------------------------
+    print("9 | Calculation of Topographic Position Index (TPI) variants")
+    #-------------------------------------------------------------------------------
+    P.TPI <- round(lseq(P.TPI1,P.TPI2,P.TPI3),0)
+    pb <- txtProgressBar(min=1, max=length(P.TPI), style=3) 
+    for(i in 1:length(P.TPI)){
+      rsaga.geoprocessor(lib="ta_morphometry",
+                         module=18,
+                         param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""),
+                                    TPI=paste(OUT.DIR,DEM,"_TPI",P.TPI[i],c(".sgrd"),sep=""),
+                                    RADIUS_MIN=0,
+                                    RADIUS_MAX=P.TPI[i]),
+                         env=myenv)
+      setTxtProgressBar(pb, i)  
+    }
+  }
+  
+  #-------------------------------------------------------------------------------
+  #print("11 | Calculation of Multi-Resolution Valley Bottom Flatness (MRVBF) index")
+  #-------------------------------------------------------------------------------
+  #if(MRVBF==TRUE){
+  #   rsaga.geoprocessor(
+  #      lib="ta_morphometry", 
+  #      module=8, 
+  #      param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
+  #                 MRVBF=c(paste(OUT.DIR,DEM,"_MRVBF.sgrd",sep="")),
+  #                 MAX_RES=1000),
+  #      env=myenv)
+  #  }
+  
+  #------------------------------------------------------------------------------- 
+  print("rename files")
+  #-------------------------------------------------------------------------------
   #export names of terrain attributes
   setwd(file.path(OUT.DIR))
   l.g <- mixedsort(list.files(pattern=paste("^(",DEM,").*\\.sgrd$",sep="")),decreasing=FALSE)
