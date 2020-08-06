@@ -5,36 +5,99 @@ print("Functions for the [Scale]-specific [P]rediction of soil classes and numer
 #######################################################################################################
 #######################################################################################################
 #######################################################################################################
-source("d:/Dropbox/_git/SOIL-DE_ScaleP/_function/fPackages.R")
-source("d:/Dropbox/_git/SOIL-DE_ScaleP/_function/fTerrA.R")
-source("d:/Dropbox/_git/SOIL-DE_ScaleP/_function/fColorComposite.R")
-source("d:/Dropbox/_git/SOIL-DE_ScaleP/_function/fZonaSt.R")
-source("d:/Dropbox/_git/SOIL-DE_ScaleP/_function/fClasP.R")
-source("d:/Dropbox/_git/SOIL-DE_ScaleP/_function/fEvaluate.R")
+source(".../ScaleP/_function/fPackages.R")
+#------------------------------------------------------------------------------------------------------
+source(".../ScaleP/_function/fMosaicBKG.R")
+source(".../ScaleP/_function/fCropRaster.R")
+source(".../ScaleP/_function/fGrid2Poly.R")
+source(".../ScaleP/_function/fSCMAP2SAGA.R")
+#------------------------------------------------------------------------------------------------------
+source(".../ScaleP/_function/fTerrA.R")
+source(".../ScaleP/_function/fZonaSt.R")
+#------------------------------------------------------------------------------------------------------
+source(".../ScaleP/_function/fRFE.R")
+source(".../ScaleP/_function/fClasP.R")
+source(".../ScaleP/_function/fNumP.R")
+source(".../ScaleP/_function/fEvaluate.R")
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
+print("Pre-Processing")
+#-----------------------------------------------------------------------------------------------------
+#Mosaicing of BKG DEM tiles
+#-----------------------------------------------------------------------------------------------------
+fSCMaP2SAGA(SCMaP.DIR,
+            SCMaP.FILE,
+            SCMaP.FRM,
+            SCMaP.PF,
+            OUT.DIR)
+
+#-----------------------------------------------------------------------------------------------------
+#Crop one- or multi.dimensional raster files
+#-----------------------------------------------------------------------------------------------------
+fCropRaster(RU.DIR,
+            RU.SHP,
+            RASTER.DIR,
+            RASTER.GRD,
+            RASTER.FRM,
+            RASTER.EPSG,
+            MULTI=FALSE,
+            EXTENT=FALSE)
+#-----------------------------------------------------------------------------------------------------
+#Convert raster cells to polygons
+#-----------------------------------------------------------------------------------------------------
+fGrid2Poly(RASTER.DIR,
+           RASTER.FILE,
+           RASTER.EPSG,
+           RASTER.FRM,
+           AGG=FALSE,
+           AGG.FCT=1,
+           OUT.DIR)
+#-----------------------------------------------------------------------------------------------------
+#Convert multi-dimensional SCMaP file to single SAGA GRID files
+#-----------------------------------------------------------------------------------------------------
+fSCMaP2SAGA(SCMaP.DIR,
+            SCMaP.FILE,
+            SCMaP.FRM,
+            SCMaP.PF,
+            OUT.DIR)
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
+print("Parametrization")
 #-----------------------------------------------------------------------------------------------------
 #Calculation of multi-scale terrain attributes
 #-------------------------------------------------------------------------------
-fTerrA(DEM.DIR="d:/Dropbox/_git/SOIL-DE_ScaleP/_input/DEM/",
-       DEM="DEM10",
-       DEM.FRM=".asc",
-       OUT.DIR="d:/Dropbox/_git/SOIL-DE_ScaleP/_output/",
-       TA="TA",
-       AGGREGATE=2,
-       EPSG=31468,
+fTerrA(DEM.DIR,
+       DEM,
+       DEM.FRM,
+       OUT.DIR,
+       TA,
+       EPSG,
        TCI=TRUE,
+       P.CA1=10000,
+       P.CA2=1000000,
+       P.CA3=10,
        MBI=TRUE,
+       P.MBI1=0.0001,
+       P.MBI2=0.1,
+       P.MBI3=10,
        NH=TRUE,
+       P.NH1=2,
+       P.NH2=1000,
+       P.NH3=10,
        TPI=TRUE,
-       VECTOR=TRUE,
-       MRVBF=TRUE)
+       P.TPI1=20,
+       P.TPI2=1000,
+       P.TPI3=10)
 #-----------------------------------------------------------------------------------------------------
 #Zonal statistics
 #-------------------------------------------------------------------------------
-fZonaSt(TA.DIR = "d:/Dropbox/_git/SOIL-DE_ScaleP/_output/TA/",
-        TA = "TA",
-        POLYGON.DIR = "d:/Dropbox/_git/SOIL-DE_ScaleP/_output/",
-        POLYGON.SHP = "DEM10_AGGREGATE2",
-        OUT.DIR = "d:/Dropbox/_git/SOIL-DE_ScaleP/_output/")
+fZonaSt(TA.DIR,
+        TA,
+        POLYGON.DIR,
+        POLYGON.SHP,
+        OUT.DIR)
 
 #-----------------------------------------------------------------------------------------------------
 #Classification
