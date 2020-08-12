@@ -11,7 +11,7 @@ for(i in pk){loadandinstall(i)}
 #######################################################################################################
 #function
 #######################################################################################################
-fMosaicBKGDEM <- function(RASTER.DIR,
+fMosaicBKG <- function(RASTER.DIR,
                     VECTOR.FILE,
                     VECTOR.GRID,
                     MOSAIC.DIR,
@@ -58,7 +58,8 @@ r.mosaic <- crop(r.mosaic, extent(v.f))
 #------------------------------------------------------------------------------- 
 print("Aggregate cell size")
 #------------------------------------------------------------------------------- 
-r.mosaic <- aggregate(r.mosaic,fact=AGGREGATE, fun=mean)
+if(AGGREGATE>1){
+r.mosaic <- aggregate(r.mosaic,fact=AGGREGATE, fun=mean)}
 #export mosaic result
 
 crs(r.mosaic) <- CRS("+init=epsg:25832")
