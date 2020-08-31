@@ -16,18 +16,30 @@ fMosaicBKG <- function(RASTER.DIR,
                     VECTOR.GRID,
                     MOSAIC.DIR,
                     MOSAIC.NAME,
+                    OUT.DIR,
                     AGGREGATE,
-                    RASTER.FRM){
+                    RASTER.FRM,
+                    EXTENT=TRUE,
+                    EXTENT.NAME){
 #----------------------------------------------------------------------------------------------
 print("Import data")
 #----------------------------------------------------------------------------------------------
 v.f <- st_read(file.path(VECTOR.FILE))
 v.g <- st_read(file.path(VECTOR.GRID))
-v.f <- st_transform(v.f, st_crs(v.g))  
+v.f <- st_transform(v.f, st_crs(v.g))
+
+
+if(EXTENT==TRUE){
+  #extent of test site
+  v.f <- st_as_sfc(st_bbox(v.f))
+  #export shapefile
+  st_write(v.f, paste(OUT.DIR,EXTENT.NAME,".shp",sep=""),delete_layer = TRUE)
+}
 #----------------------------------------------------------------------------------------------
 print("Intersection")
 #----------------------------------------------------------------------------------------------
 t <- st_intersection(v.g,v.f)  
+plot(t)
 l.grd <- paste(as.character(t$KACHEL),".asc.zip",sep="")
 #----------------------------------------------------------------------------------------------
 print("unzip all selected grid tiles files")
@@ -52,9 +64,10 @@ print("Apply the mosaic function")
 l.rf$fun <- mean
 r.mosaic <- do.call(mosaic,l.rf)
 crs(r.mosaic) <- CRS("+init=epsg:25832")
-v.f <- shapefile(VECTOR.FILE)
+v.f <- shapefile(paste(OUT.DIR,EXTENT.NAME,".shp",sep=""))
 v.f <- spTransform(v.f, r.mosaic@crs)
-r.mosaic <- crop(r.mosaic, extent(v.f))
+#apply mosaic function
+r.mosaic <- crop(r.mosaic, v.f)
 #------------------------------------------------------------------------------- 
 print("Aggregate cell size")
 #------------------------------------------------------------------------------- 
@@ -65,14 +78,14 @@ r.mosaic <- aggregate(r.mosaic,fact=AGGREGATE, fun=mean)}
 crs(r.mosaic) <- CRS("+init=epsg:25832")
 if(RASTER.FRM=="asc"){
 writeRaster(r.mosaic,
-            filename =paste(MOSAIC.DIR,MOSAIC.NAME,".asc",sep=""), 
+            filename =paste(OUT.DIR,MOSAIC.NAME,".asc",sep=""), 
             overwrite=TRUE, 
             format = "ascii")
 }
   
 if(RASTER.FRM=="tif"){
 writeRaster(r.mosaic,
-            filename =paste(MOSAIC.DIR,MOSAIC.NAME,".tif",sep=""), 
+            filename =paste(OUT.DIR,MOSAIC.NAME,".tif",sep=""), 
             overwrite=TRUE, 
             format = "GTiff")
 }  
