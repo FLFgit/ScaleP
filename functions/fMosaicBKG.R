@@ -1,3 +1,4 @@
+
 print("Mosaicing of BKG DEM files")
 #######################################################################################################
 #packages
@@ -16,7 +17,6 @@ fMosaicBKG <- function(RASTER.DIR,
                     VECTOR.GRID,
                     MOSAIC.DIR,
                     MOSAIC.NAME,
-                    OUT.DIR,
                     AGGREGATE,
                     RASTER.FRM,
                     EXTENT=TRUE,
@@ -33,7 +33,7 @@ if(EXTENT==TRUE){
   #extent of test site
   v.f <- st_as_sfc(st_bbox(v.f))
   #export shapefile
-  st_write(v.f, paste(OUT.DIR,EXTENT.NAME,".shp",sep=""),delete_layer = TRUE)
+  st_write(v.f, paste(MOSAIC.DIR,EXTENT.NAME,".shp",sep=""),delete_layer = TRUE)
 }
 #----------------------------------------------------------------------------------------------
 print("Intersection")
@@ -64,7 +64,7 @@ print("Apply the mosaic function")
 l.rf$fun <- mean
 r.mosaic <- do.call(mosaic,l.rf)
 crs(r.mosaic) <- CRS("+init=epsg:25832")
-v.f <- shapefile(paste(OUT.DIR,EXTENT.NAME,".shp",sep=""))
+v.f <- shapefile(paste(MOSAIC.DIR,EXTENT.NAME,".shp",sep=""))
 v.f <- spTransform(v.f, r.mosaic@crs)
 #apply mosaic function
 r.mosaic <- crop(r.mosaic, v.f)
@@ -78,14 +78,14 @@ r.mosaic <- aggregate(r.mosaic,fact=AGGREGATE, fun=mean)}
 crs(r.mosaic) <- CRS("+init=epsg:25832")
 if(RASTER.FRM=="asc"){
 writeRaster(r.mosaic,
-            filename =paste(OUT.DIR,MOSAIC.NAME,".asc",sep=""), 
+            filename =paste(MOSAIC.DIR,MOSAIC.NAME,".asc",sep=""), 
             overwrite=TRUE, 
             format = "ascii")
 }
   
 if(RASTER.FRM=="tif"){
 writeRaster(r.mosaic,
-            filename =paste(OUT.DIR,MOSAIC.NAME,".tif",sep=""), 
+            filename =paste(MOSAIC.DIR,MOSAIC.NAME,".tif",sep=""), 
             overwrite=TRUE, 
             format = "GTiff")
 }  
