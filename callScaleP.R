@@ -5,12 +5,24 @@ print("Functions for the [Scale]-specific [P]rediction of soil classes and numer
 #######################################################################################################
 #######################################################################################################
 #######################################################################################################
-source(".../ScaleP/_function/fPackages.R")
+#General packages
+#-------------------------------------------------------------------------------
+loadandinstall <- function(mypkg) {
+        for(i in seq(along=mypkg)){
+                if (!is.element(mypkg[i],installed.packages()[,1])){install.packages(mypkg[i])}
+                library(mypkg[i], character.only=TRUE)
+        }
+}
+packages <- sort(c("gtools",
+                   "stats",
+                   "stringr",
+                   "tidyr",
+                   "utils"))
+loadandinstall(packages)
 #------------------------------------------------------------------------------------------------------
 source(".../ScaleP/_function/fMosaicBKG.R")
 source(".../ScaleP/_function/fCropRaster.R")
 source(".../ScaleP/_function/fGrid2Poly.R")
-source(".../ScaleP/_function/fSCMAP2SAGA.R")
 #------------------------------------------------------------------------------------------------------
 source(".../ScaleP/_function/fTerrA.R")
 source(".../ScaleP/_function/fZonaSt.R")
@@ -36,7 +48,6 @@ fMosaicBKG(RASTER.DIR,
            RASTER.FRM,
            EXTENT=TRUE,
            EXTENT.NAME)
-
 #-----------------------------------------------------------------------------------------------------
 #Crop one- or multi.dimensional raster files
 #-----------------------------------------------------------------------------------------------------
