@@ -24,13 +24,18 @@ source(".../ScaleP/_function/fEvaluate.R")
 #######################################################################################################
 print("Pre-Processing")
 #-----------------------------------------------------------------------------------------------------
-#Mosaicing of BKG DEM tiles
-#-----------------------------------------------------------------------------------------------------
-fSCMaP2SAGA(SCMaP.DIR,
-            SCMaP.FILE,
-            SCMaP.FRM,
-            SCMaP.PF,
-            OUT.DIR)
+#Function for mosaicing of BKG DEM tiles
+#-------------------------------------------------------------------------------
+source("d:/Dropbox/_git/SOIL-DE/FUNCTIONS/fMosaicBKG.R")
+fMosaicBKG(RASTER.DIR,
+           VECTOR.FILE,
+           VECTOR.GRID,
+           MOSAIC.DIR,
+           MOSAIC.NAME,
+           AGGREGATE,
+           RASTER.FRM,
+           EXTENT=TRUE,
+           EXTENT.NAME)
 
 #-----------------------------------------------------------------------------------------------------
 #Crop one- or multi.dimensional raster files
