@@ -1,10 +1,5 @@
-#######################################################################################################
-#######################################################################################################
-#######################################################################################################
-print("Functions for the [Scale]-specific [P]rediction of soil classes and numeric parameters")   
-#######################################################################################################
-#######################################################################################################
-#######################################################################################################
+print("Functions for the [Scale]-specific [P]rediction of soil classes and numeric parameters")
+#-----------------------------------------------------------------------------------------------------
 #General packages
 #-------------------------------------------------------------------------------
 loadandinstall <- function(mypkg) {
@@ -19,77 +14,36 @@ packages <- sort(c("gtools",
                    "tidyr",
                    "utils"))
 loadandinstall(packages)
-#------------------------------------------------------------------------------------------------------
-source(".../ScaleP/_function/fMosaicBKG.R")
-source(".../ScaleP/_function/fCropRaster.R")
-source(".../ScaleP/_function/fGrid2Poly.R")
-#------------------------------------------------------------------------------------------------------
-source(".../ScaleP/_function/fTerrA.R")
-source(".../ScaleP/_function/fZonaSt.R")
-#------------------------------------------------------------------------------------------------------
-source(".../ScaleP/_function/fRFE.R")
-source(".../ScaleP/_function/fClasP.R")
-source(".../ScaleP/_function/fNumP.R")
-source(".../ScaleP/_function/fEvaluate.R")
-#######################################################################################################
-#######################################################################################################
-#######################################################################################################
-print("Pre-Processing")
+
+
+#-----------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------
+print("Pre-Processing functions")
+#-----------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------
 #Function for mosaicing of BKG DEM tiles
-#-------------------------------------------------------------------------------
-source("d:/Dropbox/_git/SOIL-DE/FUNCTIONS/fMosaicBKG.R")
-fMosaicBKG(RASTER.DIR,
-           VECTOR.FILE,
-           VECTOR.GRID,
-           MOSAIC.DIR,
-           MOSAIC.NAME,
-           AGGREGATE,
-           RASTER.FRM,
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fMosaicBKG.R")
+fMosaicBKG(RASTER.DIR=".../DATA/DEM_GERMANY/DHM10BKG/",
+           VECTOR.FILE=".../SOIL-DE/INPUT/QP30/BOUNDARY/umring_querfur_gross_etrs89t.shp",
+           VECTOR.GRID=".../DATA/DEM_GERMANY/DHM10BKG/dgm10_k20_utm32s.shp",
+           MOSAIC.DIR=".../SOIL-DE/INPUT/QP30/DEM/",
+           MOSAIC.NAME="QP30",
+           AGGREGATE=3,
+           RASTER.FRM="asc",
            EXTENT=TRUE,
-           EXTENT.NAME)
+           EXTENT.NAME="QP30EXTENT")
+
 #-----------------------------------------------------------------------------------------------------
-#Crop one- or multi.dimensional raster files
+#Function to derive terrain attributes using SAGA GIS
 #-----------------------------------------------------------------------------------------------------
-fCropRaster(RU.DIR,
-            RU.SHP,
-            RASTER.DIR,
-            RASTER.GRD,
-            RASTER.FRM,
-            RASTER.EPSG,
-            MULTI=FALSE,
-            EXTENT=FALSE)
-#-----------------------------------------------------------------------------------------------------
-#Convert raster cells to polygons
-#-----------------------------------------------------------------------------------------------------
-fGrid2Poly(RASTER.DIR,
-           RASTER.FILE,
-           RASTER.EPSG,
-           RASTER.FRM,
-           AGG=FALSE,
-           AGG.FCT=1,
-           OUT.DIR)
-#-----------------------------------------------------------------------------------------------------
-#Convert multi-dimensional SCMaP file to single SAGA GRID files
-#-----------------------------------------------------------------------------------------------------
-fSCMaP2SAGA(SCMaP.DIR,
-            SCMaP.FILE,
-            SCMaP.FRM,
-            SCMaP.PF,
-            OUT.DIR)
-#######################################################################################################
-#######################################################################################################
-#######################################################################################################
-print("Parametrization")
-#-----------------------------------------------------------------------------------------------------
-#Calculation of multi-scale terrain attributes
-#-------------------------------------------------------------------------------
-fTerrA(DEM.DIR,
-       DEM,
-       DEM.FRM,
-       OUT.DIR,
-       TA,
-       EPSG,
+source("d:/Dropbox/_git/SOIL-DE/FUNCTIONS/fTerrA.R")
+fTerrA(DEM.DIR=".../SOIL-DE/INPUT/QP30/DEM/",
+       DEM="QP30",
+       DEM.FRM=".asc",
+       OUT.DIR=".../SOIL-DE/INPUT/QP30/DEM/",
+       TA="TA",
+       EPSG=25832,
        TCI=TRUE,
        P.CA1=10000,
        P.CA2=1000000,
@@ -106,39 +60,163 @@ fTerrA(DEM.DIR,
        P.TPI1=20,
        P.TPI2=1000,
        P.TPI3=10)
+
+
+#-----------------------------------------------------------------------------------------------------
+#Function to crop one- or multi.dimensional raster files
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fCropRaster.R")
+fCropRaster(RU.DIR=".../SOIL-DE/INPUT/QP30/BOUNDARY/",
+            RU.SHP="QP30EXTENT",
+            RASTER.DIR=".../DATA/Sachsen-Anhalt/SCMaP/",
+            RASTER.FILE="SoilRepCompNorm_LSGer1984-2014_Sachsen-Anhalt_EPSG31468",
+            RASTER.FRM=".tif",
+            RASTER.EPSG=31468,
+            MULTI=TRUE,
+            EXTENT=FALSE)
+#-----------------------------------------------------------------------------------------------------
+#Function to filter shape files
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fFilterRU.R")
+RU.DIR=".../SOIL-DE/INPUT/QP30/RU/"
+setwd(RU.DIR)
+l.s <- mixedsort(list.files(pattern=paste("^(L).*\\.shp$",sep="")),decreasing=TRUE)
+for(i in l.s){
+fFilterRU(RU.DIR,
+          RU.SHP = substr(i,1,nchar(i)-4),
+          COL.NAME = "Brightness")
+}
+#-----------------------------------------------------------------------------------------------------
+#Function to convert raster cells to polygons"
+#-----------------------------------------------------------------------------------------------------
+#optional
+source(".../SOIL-DE/FUNCTIONS/fGrid2Poly.R")
+fGrid2Poly(RASTER.DIR=".../SOIL-DE/QP30/DEM/",
+           RASTER.FILE="QP30",
+           RASTER.EPSG=,
+           RASTER.FRM=".asc",
+           AGG=FALSE,
+           AGG.FCT=3,
+           OUT.DIR=".../SOIL-DE/QP30/RU/")
+
 #-----------------------------------------------------------------------------------------------------
 #Zonal statistics
-#-------------------------------------------------------------------------------
-fZonaSt(TA.DIR,
-        TA,
-        POLYGON.DIR,
-        POLYGON.SHP,
-        OUT.DIR)
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fZonaTA.R")
+RU.DIR=".../SOIL-DE/OUTPUT/QP30/"
+setwd(RU.DIR)
+l.s <- mixedsort(list.files(pattern=paste("^(L).*\\.shp$",sep="")),decreasing=TRUE)
+
+for(i in l.s){
+        fZonaTA(RASTER.DIR = ".../SOIL-DE/INPUT/QP30/DEM/" ,
+                TA.PF = "TA",
+                RU.DIR,
+                RU.SHP = substr(i,1,nchar(i)-4))
+}
+source(".../SOIL-DE/FUNCTIONS/fZonaRS.R")
+for(i in l.s){
+        fZonaRS(RASTER.DIR = ".../SOIL-DE/INPUT/QP30/SCMAP/",
+                RASTER.FILE = "SCMAP1984-2014_epsg25832.tif",
+                RS.PF = "SM",
+                RU.DIR,
+                RU.SHP = substr(i,1,nchar(i)-4))
+}
+
+
+#-----------------------------------------------------------------------------------------------------
+#Convert csv tables with coordinates to shape files 
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fTab2Shp.R")
+fTab2Shp(CSV.FILE=".../SOIL-DE/INPUT/QP30/AUGER/Bodendaten_Sachsen-Anhalt",
+         X="RECHTS",
+         Y="HOCH",
+         S.EPSG=31468,
+         T.EPSG=25832)
+        
+#-----------------------------------------------------------------------------------------------------
+#Prediction of numerical parameters
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fNumP.R")
+RU.DIR=".../SOIL-DE/OUTPUT/QP30/"
+setwd(RU.DIR)
+l.s <- mixedsort(list.files(pattern=paste("^(L).*\\.shp$",sep="")),decreasing=TRUE)
+
+for(PM in c("TA", "SM", "TA|SM")){
+for(i in l.s){
+        fNumP(RU.DIR,
+              RU.SHP=substr(i,1,nchar(i)-4),
+              SAMPLE.DIR=".../SOIL-DE/INPUT/QP30/AUGER/",
+              SAMPLE.SHP="HUMUS_QP30_EPSG25832",
+              OUT.DIR=".../SOIL-DE/OUTPUT/QP30/TA/NumP/",
+              EPSG=25832,
+              M.TRAIN="rf",
+              PART=0.75,
+              T.PM="HUMUS",
+              PM=PM,
+              EXPORT = FALSE)
+}
+}
 
 #-----------------------------------------------------------------------------------------------------
 #Classification
-#-------------------------------------------------------------------------------
-fClasP(POLYGON.DIR="d:/Dropbox/_git/SOIL-DE_ScaleP/_output/",
-       POLYGON.SHP="DEM10_AGGREGATE2_TA",
-       TRAIN.DIR="d:/Dropbox/_git/SOIL-DE_ScaleP/_input/AUGER/",
-       TRAIN.SHP="FIS_T1_EPSG31468",
-       OUT.DIR="d:/Dropbox/_git/SOIL-DE_ScaleP/_output/",
-       EPSG="31468",
-       M.TRAIN="rf",
-       PART=0.75,
-       T.CLASS="BOART",
-       PF.TA="TA",
-       UPTRAIN=TRUE)
 #-----------------------------------------------------------------------------------------------------
-#Color composite
-#-------------------------------------------------------------------------------
-fColorComposite(DATA.DIR = OUT.DIR,
-          RESULT.DIR = OUT.DIR,
-          B1 = "TA3.asc",
-          B2 = "TA23.asc",
-          B3 = "TA15.asc",
-          SHD= "TA16.asc",
-          ALPHA=0.5,
-          H=2000,
-          W=2100,
-          RES=300)
+source(".../SOIL-DE/FUNCTIONS/fClasP.R")
+source(".../SOIL-DE/FUNCTIONS/fClassAcc.R")
+RU.DIR=".../SOIL-DE/OUTPUT/QP30/"
+setwd(RU.DIR)
+l.s <- mixedsort(list.files(pattern=paste("^(L).*\\.shp$",sep="")),decreasing=TRUE)
+
+PM = "TA"
+#"SM", "TA|SM"
+for(i in l.s){
+        fClasP(RU.DIR,
+               RU.SHP=substr(i,1,nchar(i)-4),
+               SAMPLE.DIR=".../SOIL-DE/INPUT/QP30/AUGER/",
+               SAMPLE.SHP="BA_QP30_EPSG25832",
+               OUT.DIR=".../SOIL-DE/OUTPUT/QP30/TA/ClasP/",
+               EPSG=25832,
+               M.TRAIN="rf",
+               PART=0.75,
+               T.CLASS="BAHG",
+               PM=PM,
+               UPTRAIN=TRUE,
+               EXPORT=FALSE)
+}
+#-----------------------------------------------------------------------------------------------------
+#Recursive feature selection
+#-----------------------------------------------------------------------------------------------------
+source(".../SOIL-DE/FUNCTIONS/fRFE.R")
+RU.DIR=".../SOIL-DE/OUTPUT/QP30/"
+setwd(RU.DIR)
+l.s <- mixedsort(list.files(pattern=paste("^(L).*\\.shp$",sep="")),decreasing=TRUE)
+PM = "TA"
+#"SM", "TA|SM"
+for(i in l.s){
+        fRFE(RU.DIR,
+             RU.SHP=substr(i,1,nchar(i)-4),
+             SAMPLE.DIR=".../SOIL-DE/INPUT/QP30/AUGER/",
+             SAMPLE.SHP="HUMUS_QP30_EPSG25832",
+             OUT.DIR=".../SOIL-DE/OUTPUT/QP30/TA/RFE/",
+             T.PM="HUMUS",
+             EPSG=25832,
+             PM=PM,
+             CLASS=FALSE,
+             UPTRAIN=FALSE,
+             PART=0.75,
+             NORMALIZATION = TRUE)
+}
+
+for(i in l.s){
+        fRFE(RU.DIR,
+             RU.SHP=substr(i,1,nchar(i)-4),
+             SAMPLE.DIR=".../SOIL-DE/INPUT/QP30/AUGER/",
+             SAMPLE.SHP="HUMUS_QP30_EPSG25832",
+             OUT.DIR=".../SOIL-DE/OUTPUT/QP30/TA/RFE/",
+             T.PM="BA",
+             EPSG=25832,
+             PM=PM,
+             CLASS=TRUE,
+             UPTRAIN=TRUE,
+             PART=0.75,
+             NORMALIZATION = TRUE)
+}
