@@ -1,4 +1,10 @@
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
 print("Function to [R]ecursive [F]eature [E]limination for the prediction of soil classes and numeric parameters")
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
 #########################################################################################################
 ##Libraries and functions
 #########################################################################################################
@@ -52,6 +58,7 @@ fRFE <- function(RU.DIR,
                  PM,
                  CLASS=TRUE,
                  UPTRAIN=TRUE,
+                 NORMALIZATION=TRUE,
                  PART){
   #------------------------------------------------------------------------------------------------------
   print("Import training data set and data partition")
@@ -63,8 +70,9 @@ fRFE <- function(RU.DIR,
   print("Import reference unit polygon file")
   #------------------------------------------------------------------------------------------------------
   R <- st_read(paste(RU.DIR,RU.SHP,".shp",sep=""))
+  head(R)
   #------------------------------------------------------------------------------------------------------
-  print("Overlay polygon and traning data set")
+  print("Overlay polygon and training data set")
   #------------------------------------------------------------------------------------------------------
   st_crs(T) = as.numeric(EPSG)
   st_crs(R) = as.numeric(EPSG)
@@ -78,8 +86,9 @@ fRFE <- function(RU.DIR,
   if(is.numeric(T$TPM)==TRUE){
   T <- T[which(T$TPM>=0),]
   }
-  nrow(T)
-  head(T)
+  T <- droplevels(T)
+  
+  if(NORMALIZATION==TRUE){
   #------------------------------------------------------------------------------------------------------
   print("Normalization and scaling of predictor variables")
   #------------------------------------------------------------------------------------------------------
@@ -93,6 +102,7 @@ fRFE <- function(RU.DIR,
                               verbose=F)
   T <- predict(normalization, x)
   T$TPM <- y
+  }
   #------------------------------------------------------------------------------------------------------
   print("Splitting data to training and test set")
   #------------------------------------------------------------------------------------------------------
@@ -100,12 +110,15 @@ fRFE <- function(RU.DIR,
   indxTrain <- createDataPartition(y = T$TPM,p = PART,list = FALSE)
   T.train <- T[indxTrain,]
   T.test <- T[-indxTrain,]
-  head(T.train)
-
+  #Export
+  setwd(file.path(OUT.DIR))
+  #write_sf(T.train,paste(SAMPLE.SHP,"_",T.PM,"_part",PART*100,"_train",sep="",".shp"), delete_layer = TRUE)
+  #write_sf(T.test,paste(SAMPLE.SHP,"_",T.PM,"_part",PART*100,"_test",sep="",".shp"), delete_layer = TRUE)
+  
   if(CLASS==TRUE){
     #Plot class proportions of training and test data set
     setwd(file.path(OUT.DIR))
-    pdf(paste(SAMPLE.SHP,"_",T.PM,"RFE-BP",sep="",".pdf"), height=7,width=6)
+    pdf(paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"RFE-BP",sep="",".pdf"), height=7,width=6)
     par(mfrow = c(2, 1))
     #barplot (percentage)
     n.tab <- table(T.train$TPM)
@@ -139,7 +152,7 @@ fRFE <- function(RU.DIR,
   if(CLASS==FALSE){
     #Plot target parameter distribution of training and test data set
     setwd(file.path(OUT.DIR))
-    pdf(paste(SAMPLE.SHP,"_",T.PM,"RFE-DP",sep="",".pdf"), height=4.5,width=6)
+    pdf(paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"RFE-DP",sep="",".pdf"), height=4.5,width=6)
     par(mfrow=c(1,2))
     #plot 1
     plot(density(T.train$TPM),
@@ -194,23 +207,23 @@ fRFE <- function(RU.DIR,
   
   #Report
   setwd(file.path(OUT.DIR))
-  sink(paste(SAMPLE.SHP,"_",T.PM,"_RFE-BV",c(".txt"),sep=""))
+  sink(paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"_RFE-BV",c(".txt"),sep=""))
   print(rfProfile$optVariables)
   sink()
   
   if(CLASS==TRUE){
-  write.csv2(data.frame(rfProfile$fit$confusion),file = paste(SAMPLE.SHP,"_",T.PM,"_RFE-CV",c(".csv"),sep=""))
+  write.csv2(data.frame(rfProfile$fit$confusion),file = paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"_RFE-CV",c(".csv"),sep=""))
   }
   
-  sink(paste(SAMPLE.SHP,"_",T.PM,"_RFE-OA",c(".txt"),sep=""))
+  sink(paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"_RFE-OA",c(".txt"),sep=""))
   print(rfProfile$fit)
   sink()
 
-  write.csv2(data.frame(rfProfile$fit$importance),file = paste(SAMPLE.SHP,"_",T.PM,"_RFE-IMP",c(".csv"),sep=""))
-  write.csv2(data.frame(rfProfile$results),file = paste(SAMPLE.SHP,"_",T.PM,"_RFE-ACC",c(".csv"),sep=""))
+  write.csv2(data.frame(rfProfile$fit$importance),file = paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"_RFE-IMP",c(".csv"),sep=""))
+  write.csv2(data.frame(rfProfile$results),file = paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"_RFE-ACC",c(".csv"),sep=""))
   
   
-  pdf(paste(SAMPLE.SHP,"_",T.PM,"_RFE-ACC",c(".pdf"),sep=""),height=4,width=6)
+  pdf(paste(RU.SHP,"-",SAMPLE.SHP,"_",T.PM,"_RFE-ACC",c(".pdf"),sep=""),height=4,width=6)
   print(plot(rfProfile, type=c("g", "o")))
   dev.off()
 }
