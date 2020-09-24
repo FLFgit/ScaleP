@@ -9,7 +9,7 @@
 #######################################################################################################
 #######################################################################################################
 #input actual & predicted vectors or actual vs predicted confusion matrix 
-fEvaluate = function(actual=NULL, 
+fClassAcc = function(actual=NULL, 
                     predicted=NULL, 
                     cm=NULL){
   if(is.null(cm)) {
