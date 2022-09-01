@@ -115,7 +115,7 @@ fTerrA <- function(DEM.DIR,
     env=myenv)  
   
   if(OPN==TRUE){
-  P.OPN <- round(lseq(P.CA1,P.CA2,P.CA3),0)
+  P.OPN <- round(lseq(P.OPN1,P.OPN2,P.OPN3),0)
   for(i in 1:length(P.OPN)){  
   rsaga.geoprocessor(
     lib="ta_lighting", 
