@@ -51,7 +51,7 @@ rsaga.get.usage("ta_lighting",0,env =  myenv)
 #########################################################################################################
 ##Function
 #########################################################################################################
-fTerrA1 <- function(DEM.DIR,
+fTerrA <- function(DEM.DIR,
                    DEM,
                    DEM.FRM,
                    OUT.DIR,
@@ -68,6 +68,10 @@ fTerrA1 <- function(DEM.DIR,
                    P.NH1,
                    P.NH2,
                    P.NH3,
+                   OPN=TRUE,
+                   P.OPN1=10,
+                   P.OPN2=10000,
+                   P.OPN3=10,
                    TPI=TRUE,
                    P.TPI1,
                    P.TPI2,
@@ -110,15 +114,22 @@ fTerrA1 <- function(DEM.DIR,
                EXAGGERATION=20),
     env=myenv)  
   
+  if(OPN==TRUE){
+  P.OPN <- round(lseq(P.CA1,P.CA2,P.CA3),0)
+  for(i in 1:length(P.OPN)){  
   rsaga.geoprocessor(
     lib="ta_lighting", 
     module=5, 
     param=list(DEM=paste(OUT.DIR,DEM,"_FILL.sgrd",sep=""), 
-               POS=paste(OUT.DIR,DEM,"_TOP.sgrd",sep=""),
-               NEG=paste(OUT.DIR,DEM,"_TON.sgrd",sep=""),
-               METHOD=0),
+               POS=paste(OUT.DIR,DEM,"_TOP",P.OPN[i],c(".sgrd"),sep=""),
+               NEG=paste(OUT.DIR,DEM,"_TON",P.OPN[i],c(".sgrd"),sep=""),
+               METHOD=0,
+               RADIUS=P.OPN[i]),
     env=myenv)  
-  
+  }
+    
+    
+  TARGET_OUT_GRID=paste(OUT.DIR,DEM,"_BL_TH",P.CA[i],c(".sgrd"),sep=""),
   #------------------------------------------------------------------------------- 
   print("4 | Slope calculation (degrees)")
   #-------------------------------------------------------------------------------
